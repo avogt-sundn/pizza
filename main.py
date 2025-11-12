@@ -65,19 +65,24 @@ except Exception as e:
 # ------------------------------------------------------------------
 # 3️⃣  Build the prompt chain
 # ------------------------------------------------------------------
-prompt = ChatPromptTemplate.from_messages(
-    [
-        ("system", "You are a helpful assistant."),
-        ("human", "{input}"),
-    ]
-)
+template = """
+
+You are an expert in answerting questions about a pizza restaurant.
+Here are some relevant reviews: {reviews}
+Here is the question to answer: {question}
+
+"""
+
+
+prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | model
 
 # ------------------------------------------------------------------
 # 4️⃣  Invoke the chain and handle errors
 # ------------------------------------------------------------------
 try:
-    result = chain.invoke({"input": "Hello"})
+    result = chain.invoke(
+        {"reviews": [], "question": "What is the best pizza place in town?"})
     print(result)
 except Exception as e:
     print(
