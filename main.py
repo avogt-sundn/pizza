@@ -1,4 +1,3 @@
-import os
 import sys
 import httpx
 from langchain_ollama.llms import OllamaLLM
@@ -77,21 +76,29 @@ Here is the question to answer: {question}
 prompt = ChatPromptTemplate.from_template(template)
 chain = prompt | model
 
-# ------------------------------------------------------------------
-# 4️⃣  Invoke the chain and handle errors
-# ------------------------------------------------------------------
-try:
-    result = chain.invoke(
-        {"reviews": [], "question": "What is the best pizza place in town?"})
-    print(result)
-except Exception as e:
-    print(
-        f"❌ Failed to connect to the Ollama server at {ollama_url}.",
-        file=sys.stderr,
-    )
-    print(
-        "   Make sure the Ollama daemon is running and reachable from the container.",
-        file=sys.stderr,
-    )
-    print(f"   Error details: {e}", file=sys.stderr)
-    sys.exit(1)
+while True:
+    print("\n\n------------------")
+    question = input("Ask your question (q to quit) :")
+    print("\n\n")
+    if question == "q":
+        break
+
+    # ------------------------------------------------------------------
+    # 4️⃣  Invoke the chain and handle errors
+    # ------------------------------------------------------------------
+
+    try:
+        result = chain.invoke(
+            {"reviews": [], "question": "What is the best pizza place in town?"})
+        print(result)
+    except Exception as e:
+        print(
+            f"❌ Failed to connect to the Ollama server at {ollama_url}.",
+            file=sys.stderr,
+        )
+        print(
+            "   Make sure the Ollama daemon is running and reachable from the container.",
+            file=sys.stderr,
+        )
+        print(f"   Error details: {e}", file=sys.stderr)
+        sys.exit(1)
