@@ -1,46 +1,11 @@
 import sys
+
 import httpx
-from langchain_ollama.llms import OllamaLLM
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_ollama.llms import OllamaLLM
 
-# ------------------------------------------------------------------
-# 1️⃣  Discover the Ollama host
-# ------------------------------------------------------------------
-OLLAMA_PORT = 11434
-CANDIDATES = [
-    f"http://host.docker.internal:{OLLAMA_PORT}",
-    f"http://localhost:{OLLAMA_PORT}",
-]
-
-
-def _is_ollama_up(url: str) -> bool:
-    """
-    Ping the Ollama server.  Ollama exposes a simple `/api/tags` endpoint
-    that returns a JSON list of available models.  If the request succeeds
-    (status 200) we consider the host reachable.
-    """
-    try:
-        with httpx.Client(timeout=2.0) as client:
-            resp = client.get(f"{url}/api/tags")
-            return resp.status_code == 200
-    except Exception:
-        return False
-
-
-def discover_ollama() -> str:
-    """
-    Return the first URL from CANDIDATES that responds to /api/tags.
-    Raise RuntimeError if none are reachable.
-    """
-    for url in CANDIDATES:
-        if _is_ollama_up(url):
-            return url
-    raise RuntimeError(
-        "Could not reach an Ollama daemon on any of the following URLs:\n"
-        + "\n".join(f"  - {u}" for u in CANDIDATES)
-        + "\n\nMake sure the Ollama server is running and reachable."
-    )
-
+from discover_ollama import discover_ollama
+from vector import retriever
 
 # ------------------------------------------------------------------
 # 2️⃣  Initialise the LLM client with the discovered URL
@@ -52,7 +17,7 @@ except RuntimeError as exc:
     sys.exit(1)
 
 try:
-    model = OllamaLLM(model="gpt-oss", base_url=ollama_url)
+    model = OllamaLLM(model="llama3.2", base_url=discover_ollama())
 except Exception as e:
     print(
         f"❌ Failed to initialise Ollama client at {ollama_url}.",
@@ -88,17 +53,10 @@ while True:
     # ------------------------------------------------------------------
 
     try:
+        reviews = retriever.invoke(question)
         result = chain.invoke(
             {"reviews": [], "question": "What is the best pizza place in town?"})
         print(result)
     except Exception as e:
-        print(
-            f"❌ Failed to connect to the Ollama server at {ollama_url}.",
-            file=sys.stderr,
-        )
-        print(
-            "   Make sure the Ollama daemon is running and reachable from the container.",
-            file=sys.stderr,
-        )
         print(f"   Error details: {e}", file=sys.stderr)
         sys.exit(1)

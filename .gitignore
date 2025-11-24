@@ -1,1 +1,4 @@
 .history
+__pycache__/
+.venv/
+chrome_langchain_db/
