@@ -55,7 +55,7 @@ while True:
     try:
         reviews = retriever.invoke(question)
         result = chain.invoke(
-            {"reviews": [], "question": "What is the best pizza place in town?"})
+            {"reviews": reviews, "question": question})
         print(result)
     except Exception as e:
         print(f"   Error details: {e}", file=sys.stderr)
